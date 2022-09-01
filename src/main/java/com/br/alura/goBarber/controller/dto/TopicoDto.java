@@ -1,6 +1,8 @@
 package com.br.alura.goBarber.controller.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.br.alura.goBarber.modelo.Topico;
 
@@ -32,6 +34,11 @@ public class TopicoDto {
 
 	public LocalDateTime getDataCriacao() {
 		return dataCriacao;
+	}
+
+	//converter de Topico para TopicoDto
+	public static List<TopicoDto> convert(List<Topico> topicos) {
+		return topicos.stream().map(TopicoDto::new).collect(Collectors.toList());
 	}
 
 }
