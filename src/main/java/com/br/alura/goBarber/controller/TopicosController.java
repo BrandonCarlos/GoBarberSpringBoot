@@ -2,6 +2,7 @@ package com.br.alura.goBarber.controller;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -60,16 +61,24 @@ public class TopicosController {
 	
 	@GetMapping("/{id}")
 	//@PathVariable pra dizer que será com / e não com ? na URL
-	public DetalhesDoTopicoDto detalhar(@PathVariable Long id) {//DetalhesDoTopicoDto para retornar + que 4 atributos
-		Topico topico = topicoRepository.getReferenceById(id);
-		return new DetalhesDoTopicoDto(topico);
+	public ResponseEntity<DetalhesDoTopicoDto> detalhar(@PathVariable Long id) {//DetalhesDoTopicoDto para retornar + que 4 atributos
+		Optional<Topico> topico = topicoRepository.findById(id);//se o findById não encontrar o ID não lança EXCEPTION
+		if(topico.isPresent()) {
+			return ResponseEntity.ok(new DetalhesDoTopicoDto(topico.get()));//get() <- para pegar "Topico" mesmo e não "Optional<Topico>"			
+		}
+		
+		return ResponseEntity.notFound().build();//build() para mostrar o objeto ResponseEntity
 	}
 	
 	@PutMapping("/{id}")
 	@Transactional //para avisar ao Spring para comitar a transação no final do método
 	public ResponseEntity<TopicoDto> atualizar(@PathVariable Long id, @RequestBody @Valid AtualizacaoTopicoForm form) {
-	 	Topico topico = form.atualizar(id, topicoRepository);
-	 	return ResponseEntity.ok(new TopicoDto(topico));//o corpo que será devolvido como resposta pro servidor
+		Optional<Topico> optional = topicoRepository.findById(id);//se o findById não encontrar o ID não lança EXCEPTION
+		if(optional.isPresent()) {
+			Topico topico = form.atualizar(id, topicoRepository);
+			return ResponseEntity.ok(new TopicoDto(topico));//o corpo que será devolvido como resposta pro servidor
+		}
+		return ResponseEntity.notFound().build();//aqui ta devolvendo 404
 	 	//Aqui nem precisamos fazer ex: topicoRepository.update() nem nada pois o próprio Spring se encarrega de atualizar no BD
 	}
 	
@@ -77,9 +86,12 @@ public class TopicosController {
 	@Transactional
 	//Esse ResponseEntity<TopicoDto> <- isso é o que é devolvido no corpo da requisição para nós que estamos no back-end
 	public ResponseEntity<?> remover(@PathVariable Long id) {//Obriga a colocar Generic, então vamos colocar "?" <- não sei qual é o tipo
-		topicoRepository.deleteById(id);
-		//ResponseEntity.ok() <-vazio pq vai retornar apenas 200 OK, sem nenhum corpo
-		return ResponseEntity.ok().build();
+		Optional<Topico> optional = topicoRepository.findById(id);//se o findById não encontrar o ID não lança EXCEPTION
+		if(optional.isPresent()) {
+			topicoRepository.deleteById(id);
+			return ResponseEntity.ok().build();//retorna 200, sem corpo
+		}
+		return ResponseEntity.notFound().build();//aqui ta devolvendo 404
 	}
 	
 }
